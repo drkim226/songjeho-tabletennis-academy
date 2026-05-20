@@ -61,6 +61,32 @@ export default function Contact() {
                   <p><span className="font-semibold">Monday-Friday:</span> 8:00 AM – 8:00 PM</p>
                 </div>
               </div>
+
+              {/* Holiday Closures */}
+              <div className="border-t border-slate-200 pt-6">
+                <p className="mb-3 text-sm font-bold uppercase tracking-widest text-orange-500">
+                  Holiday Closures
+                </p>
+
+                <div className="flex flex-wrap gap-x-3 gap-y-2 text-sm leading-relaxed text-slate-500">
+                  <span>New Year's Day</span>
+                  <span>•</span>
+
+                  <span>Memorial Day</span>
+                  <span>•</span>
+
+                  <span>Independence Day</span>
+                  <span>•</span>
+
+                  <span>Labor Day</span>
+                  <span>•</span>
+
+                  <span>Thanksgiving Day</span>
+                  <span>•</span>
+
+                  <span>Christmas Day</span>
+                </div>
+              </div>
             </div>
           </div>
 

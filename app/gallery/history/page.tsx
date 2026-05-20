@@ -1,89 +1,27 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PhotoMasonryGallery from "@/components/PhotoMasonryGallery";
+import { supabase } from "@/lib/supabase";
 
-export default function HistoryGalleryPage() {
-  const photos = [
-    {
-      id: 1,
-      title: "Opening Day",
-      src: "/images/gallery/1.webp",
-      description: "A meaningful academy memory.",
-    },
-    {
-      id: 2,
-      title: "Coach & Members",
-      src: "/images/gallery/2.webp",
-      description: "Coaches and members together.",
-    },
-    {
-      id: 3,
-      title: "Training Moment",
-      src: "/images/gallery/3.webp",
-      description: "Daily training culture.",
-    },
-    {
-      id: 4,
-      title: "Club Event",
-      src: "/images/gallery/4.webp",
-      description: "Special academy event.",
-    },
-    {
-      id: 5,
-      title: "Community Day",
-      src: "/images/gallery/5.webp",
-      description: "Members enjoying table tennis.",
-    },
-    {
-      id: 6,
-      title: "Academy Memory",
-      src: "/images/gallery/6.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 7,
-      title: "Academy Memory",
-      src: "/images/gallery/7.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 8,
-      title: "Academy Memory",
-      src: "/images/gallery/8.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 9,
-      title: "Academy Memory",
-      src: "/images/gallery/9.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 10,
-      title: "Academy Memory",
-      src: "/images/gallery/10.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 11,
-      title: "Academy Memory",
-      src: "/images/gallery/11.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 12,
-      title: "Academy Memory",
-      src: "/images/gallery/12.webp",
-      description: "A special club moment.",
-    },
-    {
-      id: 13,
-      title: "Academy Memory",
-      src: "/images/gallery/13.webp",
-      description: "A special club moment.",
-    },
+export default async function HistoryGalleryPage() {
+  const { data, error } = await supabase
+    .from("gallery_images")
+    .select("id, title, src, description")
+    .eq("category", "history")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
 
-  ];
+  const photos =
+    !error && data && data.length > 0
+      ? data
+      : [
+          {
+            id: 1,
+            title: "Opening Day",
+            src: "/images/gallery/1.webp",
+            description: "A meaningful academy memory.",
+          },
+        ];
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
@@ -101,8 +39,6 @@ export default function HistoryGalleryPage() {
 
           <p className="mb-12 max-w-3xl text-lg leading-8 text-slate-600">
             A curated photo archive managed by Song Jeho Table Tennis Academy.
-            Photos will later be loaded from the database and displayed in a
-            stylish masonry gallery.
           </p>
 
           <PhotoMasonryGallery photos={photos} />

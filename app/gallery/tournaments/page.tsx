@@ -1,46 +1,21 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 
-const tournaments = [
-  {
-    title: "2026 Spring Tournament",
-    href: "/gallery/tournaments/spring-tournament",
-    image: "/images/gallery/1.webp",
-    description:
-      "Friendly competition and exciting matches from our spring tournament.",
-  },
-  {
-    title: "2026 Summer Open",
-    href: "/gallery/tournaments/summer-open",
-    image: "/images/gallery/5.webp",
-    description:
-      "Players from different clubs joined together for our summer open event.",
-  },
-  {
-    title: "2026 Fall Championship",
-    href: "/gallery/tournaments/fall-championship",
-    image: "/images/gallery/9.webp",
-    description:
-      "A high-level championship event with strong competition and great memories.",
-  },
-  {
-    title: "2026 Year-End Tournament",
-    href: "/gallery/tournaments/year-end-tournament",
-    image: "/images/gallery/13.webp",
-    description:
-      "Celebrating the end of the season with members and supporters together.",
-  },
-];
+export default async function TournamentGalleryPage() {
+  const { data: albums, error } = await supabase
+    .from("gallery_albums")
+    .select("id, title, slug, description, cover_image, sort_order")
+    .eq("category", "tournament")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
 
-export default function TournamentGalleryPage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
       <Header />
 
       <section className="px-6 pb-24 pt-32">
         <div className="mx-auto max-w-7xl">
-          {/* TITLE */}
           <div className="mb-16 text-center">
             <p className="mb-3 text-sm font-bold uppercase tracking-[0.35em] text-orange-500">
               Tournament Gallery
@@ -56,36 +31,50 @@ export default function TournamentGalleryPage() {
             </p>
           </div>
 
-          {/* GRID */}
+          {error && (
+            <p className="rounded-3xl bg-red-50 p-6 text-red-600">
+              Could not load tournament albums.
+            </p>
+          )}
+
+          {!error && (!albums || albums.length === 0) && (
+            <p className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow">
+              No tournament albums have been added yet.
+            </p>
+          )}
+
           <div className="grid gap-10 md:grid-cols-2 xl:grid-cols-4">
-            {tournaments.map((item, index) => (
+            {albums?.map((album) => (
               <a
-                key={index}
-                href={item.href}
+                key={album.id}
+                href={`/gallery/tournaments/${album.slug}`}
                 className="group overflow-hidden rounded-[2rem] bg-white shadow-lg transition duration-300 hover:-translate-y-2 hover:shadow-2xl"
               >
-                {/* IMAGE */}
-                <div className="relative h-[260px] overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    className="object-cover transition duration-500 group-hover:scale-105"
-                  />
+                <div className="relative h-[260px] overflow-hidden bg-slate-200">
+                  {album.cover_image ? (
+                    <img
+                      src={album.cover_image}
+                      alt={album.title}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-slate-400">
+                      No Cover Image
+                    </div>
+                  )}
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
                   <div className="absolute bottom-5 left-5 right-5">
                     <h2 className="text-2xl font-bold text-white">
-                      {item.title}
+                      {album.title}
                     </h2>
                   </div>
                 </div>
 
-                {/* CONTENT */}
                 <div className="p-6">
                   <p className="leading-7 text-slate-600">
-                    {item.description}
+                    {album.description || "Tournament photo album."}
                   </p>
 
                   <div className="mt-6 inline-flex items-center font-bold text-sky-600">

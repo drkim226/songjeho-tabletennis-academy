@@ -1,45 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import PhotoMasonryGallery from "@/components/PhotoMasonryGallery";
-
-const tournamentAlbums = {
-  "spring-tournament": {
-    title: "2026 Spring Tournament",
-    photos: [
-      { id: 1, title: "Photo 1", src: "/images/gallery/1.webp", description: "" },
-      { id: 2, title: "Photo 2", src: "/images/gallery/2.webp", description: "" },
-      { id: 3, title: "Photo 3", src: "/images/gallery/3.webp", description: "" },
-      { id: 4, title: "Photo 4", src: "/images/gallery/4.webp", description: "" },
-      { id: 5, title: "Photo 5", src: "/images/gallery/5.webp", description: "" },
-    ],
-  },
-
-  "summer-open": {
-    title: "2026 Summer Open",
-    photos: [
-      { id: 1, title: "Photo 1", src: "/images/gallery/6.webp", description: "" },
-      { id: 2, title: "Photo 2", src: "/images/gallery/7.webp", description: "" },
-      { id: 3, title: "Photo 3", src: "/images/gallery/8.webp", description: "" },
-      { id: 4, title: "Photo 4", src: "/images/gallery/9.webp", description: "" },
-    ],
-  },
-
-  "fall-championship": {
-    title: "2026 Fall Championship",
-    photos: [
-      { id: 1, title: "Photo 1", src: "/images/gallery/10.webp", description: "" },
-      { id: 2, title: "Photo 2", src: "/images/gallery/11.webp", description: "" },
-      { id: 3, title: "Photo 3", src: "/images/gallery/12.webp", description: "" },
-    ],
-  },
-
-  "year-end-tournament": {
-    title: "2026 Year-End Tournament",
-    photos: [
-      { id: 1, title: "Photo 1", src: "/images/gallery/13.webp", description: "" },
-    ],
-  },
-};
+import { supabase } from "@/lib/supabase";
 
 export default async function TournamentAlbumPage({
   params,
@@ -47,12 +9,20 @@ export default async function TournamentAlbumPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const album = tournamentAlbums[slug as keyof typeof tournamentAlbums];
 
-  if (!album) {
+  const { data: album, error: albumError } = await supabase
+    .from("gallery_albums")
+    .select("id, title, description, slug")
+    .eq("category", "tournament")
+    .eq("slug", slug)
+    .eq("active", true)
+    .single();
+
+  if (albumError || !album) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-800">
         <Header />
+
         <section className="px-6 pb-24 pt-32">
           <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-xl">
             <h1 className="text-4xl font-bold text-slate-900">
@@ -67,10 +37,21 @@ export default async function TournamentAlbumPage({
             </a>
           </div>
         </section>
+
         <Footer />
       </main>
     );
   }
+
+  const { data: photos, error: photosError } = await supabase
+    .from("gallery_images")
+    .select("id, title, src, description, sort_order")
+    .eq("category", "tournament")
+    .eq("album_id", album.id)
+    .eq("active", true)
+    .eq("approved", true)
+    .eq("visibility", "public")
+    .order("sort_order", { ascending: true });
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
@@ -87,10 +68,25 @@ export default async function TournamentAlbumPage({
           </h1>
 
           <p className="mb-12 max-w-3xl text-lg leading-8 text-slate-600">
-            Browse photos from this tournament. Click any photo to view it larger.
+            {album.description ||
+              "Browse photos from this tournament. Click any photo to view it larger."}
           </p>
 
-          <PhotoMasonryGallery photos={album.photos} />
+          {photosError && (
+            <p className="rounded-3xl bg-red-50 p-6 text-red-600">
+              Could not load tournament photos.
+            </p>
+          )}
+
+          {!photosError && (!photos || photos.length === 0) && (
+            <p className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow">
+              No photos have been uploaded to this album yet.
+            </p>
+          )}
+
+          {photos && photos.length > 0 && (
+            <PhotoMasonryGallery photos={photos} />
+          )}
 
           <a
             href="/gallery/tournaments"
