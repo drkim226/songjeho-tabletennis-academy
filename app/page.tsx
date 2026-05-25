@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import RatingSection from "@/components/RatingSection";
 import About from "@/components/About";
 import Coaching from "@/components/Coaching";
 import Membership from "@/components/Membership";
@@ -14,6 +15,8 @@ export default function Home() {
       <Header />
 
       <Hero />
+
+      <RatingSection />
 
       <About />
 

@@ -1,5 +1,4 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 
 const coachData = {
   "song-jeho": {
@@ -161,7 +160,7 @@ export default async function CoachProfilePage({
   if (!coach) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-800">
-        <Header />
+      
 
         <section className="px-6 pb-24 pt-32">
           <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-xl">
@@ -178,14 +177,14 @@ export default async function CoachProfilePage({
           </div>
         </section>
 
-        <Footer />
+       
       </main>
     );
   }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
-      <Header />
+      
 
       <section className="px-6 pb-24 pt-32">
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1fr_1.2fr]">
@@ -277,7 +276,7 @@ export default async function CoachProfilePage({
         </div>
       </section>
 
-      <Footer />
+     
     </main>
   );
 }

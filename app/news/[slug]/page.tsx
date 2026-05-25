@@ -1,38 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-const newsData = {
-  "beginner-class": {
-    category: "Club Announcement",
-    title: "Beginner Class Open",
-    date: "June 2026",
-    content: [
-      "We are excited to announce that beginner-friendly training sessions are now available.",
-      "This class is designed for players who want to learn basic footwork, grip, stroke mechanics, serve, receive, and rally control.",
-      "New members are welcome. No advanced experience is required.",
-    ],
-  },
-  "friday-tournament": {
-    category: "Event / Tournament",
-    title: "Friday Night Tournament",
-    date: "Every Friday at 7 PM",
-    content: [
-      "Our weekly Friday Night Tournament is open to club members who want to enjoy friendly competition.",
-      "Players will be matched by level whenever possible, so beginners and advanced players can both enjoy the event.",
-      "This is a great opportunity to meet other players and improve your match experience.",
-    ],
-  },
-  "backspin-tip": {
-    category: "Table Tennis Tip",
-    title: "How to Handle Heavy Backspin",
-    date: "Coach’s Corner",
-    content: [
-      "When handling heavy backspin, the key is racket angle, timing, and upward brushing contact.",
-      "Do not hit too flat. Open the racket slightly and contact the ball with a smooth upward motion.",
-      "For more consistency, focus on thin contact and good body balance after the stroke.",
-    ],
-  },
-};
+import { supabase } from "@/lib/supabase";
 
 export default async function NewsDetailPage({
   params,
@@ -40,17 +8,23 @@ export default async function NewsDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const news = newsData[slug as keyof typeof newsData];
 
-  if (!news) {
+  const { data: post, error } = await supabase
+    .from("news_posts")
+    .select("*")
+    .eq("slug", decodeURIComponent(slug))
+    .eq("active", true)
+    .single();
+
+  if (error || !post) {
     return (
-      <main className="min-h-screen bg-slate-50 text-slate-800">
+      <>
         <Header />
 
-        <section className="px-6 pb-24 pt-32">
+        <main className="min-h-screen bg-slate-50 px-6 py-24 text-slate-800">
           <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-xl">
-            <h1 className="text-4xl font-bold text-slate-900">
-              News not found
+            <h1 className="text-4xl font-extrabold text-slate-900">
+              News post not found
             </h1>
 
             <a
@@ -60,36 +34,61 @@ export default async function NewsDetailPage({
               Back to News
             </a>
           </div>
-        </section>
+        </main>
 
         <Footer />
-      </main>
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-800">
+    <>
       <Header />
 
-      <section className="px-6 pb-24 pt-32">
-        <article className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-xl">
+      <main className="min-h-screen bg-slate-50 px-6 py-24 text-slate-800">
+        <article className="mx-auto max-w-4xl rounded-3xl bg-white p-10 shadow-xl">
           <p className="mb-4 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
-            {news.category}
+            Song Jeho TTA News
           </p>
 
-          <h1 className="mb-4 text-5xl font-extrabold text-slate-900">
-            {news.title}
+          <h1 className="text-5xl font-extrabold text-slate-900">
+            {post.title}
           </h1>
 
-          <p className="mb-10 text-slate-500">
-            {news.date}
+          <p className="mt-4 text-slate-500">
+            {new Date(post.created_at).toLocaleDateString()}
           </p>
 
-          <div className="space-y-6 text-lg leading-8 text-slate-700">
-            {news.content.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
-          </div>
+          {post.cover_image && (
+            <div className="mt-8 flex justify-center">
+  <img
+    src={post.cover_image}
+    alt={post.title}
+    className="max-h-[700px] max-w-full rounded-3xl object-contain"
+  />
+</div>
+          )}
+
+          {post.excerpt && (
+            <p className="mt-8 text-xl font-semibold leading-8 text-slate-700">
+              {post.excerpt}
+            </p>
+          )}
+
+          {post.content && (
+  <div
+    className="mt-8 text-lg leading-6 text-slate-700
+      [&_h1]:my-2 [&_h1]:text-4xl [&_h1]:font-extrabold [&_h1]:leading-tight
+      [&_h2]:my-2 [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:leading-tight
+      [&_p]:my-1
+      [&_ul]:my-2 [&_ul]:list-disc [&_ul]:pl-8
+      [&_ol]:my-2 [&_ol]:list-decimal [&_ol]:pl-8
+      [&_li]:my-0 [&_li]:pl-1
+      [&_strong]:font-extrabold
+      [&_em]:italic"
+    dangerouslySetInnerHTML={{ __html: post.content }}
+  />
+)}
 
           <a
             href="/#news"
@@ -98,9 +97,9 @@ export default async function NewsDetailPage({
             Back to News
           </a>
         </article>
-      </section>
+      </main>
 
       <Footer />
-    </main>
+    </>
   );
 }

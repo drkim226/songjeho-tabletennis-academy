@@ -5,89 +5,55 @@
 - Supabase Auth
 - Supabase Storage
 - TailwindCSS
+- TipTap WYSIWYG Editor
 
 ---
 
 ## Completed Features
 
-### Auth
-- Member registration
-- Login/logout
-- Profile page
+### Auth / Access
+- Supabase login/logout
+- `/admin` works as main login page
+- `/members/login` removed
+- Member role application page (`/members/register`)
+- User dashboard (`/members/profile`)
 - Edit profile
 - Avatar upload
+- Hidden Admin Login from public menu
+- Hidden Apply Access from public menu
+
+### Roles / Permissions
+Current roles:
+- Admin
+- Site Manager
+- Sponsor
+- Coach
+- Association Representative
+
+Rules:
+- Admin assigned directly by database/admin
+- Site Manager requires Admin approval
+- Sponsor requires Admin approval
+- Coach requires Admin approval
+- Association Representative requires Admin approval
+- Role approval system completed
+
+---
 
 ### Admin
 - Admin dashboard
+- Account role management
 - Member approval system
-- Skill verification system
+- Role editing system
+- Admin access validation
+- Rating management page
+- Contact message management page
+- News management page
 
-### Gallery
-- gallery_images table
-- gallery_albums table
-- Multi-image upload
-- Storage bucket: gallery-images
-
----
-
-## DB Tables
-
-### members
-- id
-- created_at
-- auth_user_id
-- full_name
-- email
-- phone
-- membership_type
-- role_approved
-- skill_level
-- skill_level_verified
-- avatar_url
-
-### admin_users
-- id
-- auth_user_id
-- email
-- created_at
-
-### gallery_albums
-- id
-- created_at
-- title
-- slug
-- category
-- description
-- cover_image
-- sort_order
-- active
-
-### gallery_images
-- id
-- created_at
-- category
-- title
-- src
-- description
-- sort_order
-- active
-- album_id
-- uploaded_by
-- approved
-- visibility
-
----
-
-## Current Work
-
-Working on:
-- Tournament gallery album system
-- Member-upload gallery system
-
----
-
-## Important Paths
-
-app/admin/gallery/page.tsx
-app/gallery/history/page.tsx
-app/members/profile/page.tsx
+Admin Pages:
+```text
+/admin
+/admin/rating
+/admin/messages
+/admin/gallery
+/admin/news

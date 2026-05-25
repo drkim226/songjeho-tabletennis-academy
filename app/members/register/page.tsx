@@ -4,22 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-const membershipTypes = [
-  { value: "not_member", label: "Not a Member Yet" },
-  { value: "regular", label: "Regular Member" },
-  { value: "coach", label: "Coach" },
-  { value: "sponsor", label: "Sponsor" },
-  { value: "admin", label: "Admin" },
-];
-
-const skillLevels = [
-  { value: "S", label: "S Level" },
-  { value: "A", label: "A Level" },
-  { value: "B", label: "B Level" },
-  { value: "C", label: "C Level" },
-  { value: "D", label: "D Level" },
-  { value: "beginner", label: "Beginner" },
-  { value: "senior", label: "Senior" },
+const accountRoles = [
+  { value: "Coach", label: "Coach" },
+  { value: "Sponsor", label: "Sponsor" },
+  { value: "Site Manager", label: "Site Manager" },
+  {
+    value: "Association Representative",
+    label: "Association Representative",
+  },
 ];
 
 export default function RegisterPage() {
@@ -32,8 +24,7 @@ export default function RegisterPage() {
     email: "",
     phone: "",
     password: "",
-    membership_type: "not_member",
-    skill_level: "beginner",
+    membership_type: "Coach",
   });
 
   const handleChange = (
@@ -44,10 +35,6 @@ export default function RegisterPage() {
       [e.target.name]: e.target.value,
     });
   };
-
-  const needsApproval = ["coach", "sponsor", "admin"].includes(
-    formData.membership_type
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +48,6 @@ export default function RegisterPage() {
           full_name: formData.full_name,
           phone: formData.phone,
           membership_type: formData.membership_type,
-          skill_level: formData.skill_level,
         },
       },
     });
@@ -81,12 +67,7 @@ export default function RegisterPage() {
         email: formData.email,
         phone: formData.phone,
         membership_type: formData.membership_type,
-        role_approved:
-  formData.membership_type === "not_member"
-    ? true
-    : false,
-        skill_level: formData.skill_level,
-        skill_level_verified: false,
+        role_approved: false,
       },
     ]);
 
@@ -98,10 +79,10 @@ export default function RegisterPage() {
     }
 
     alert(
-      "Registration completed! Please check your email if confirmation is required."
+      "Your role application has been submitted. Please wait for administrator approval."
     );
 
-    router.push("/members/login");
+    router.push("/admin");
   };
 
   return (
@@ -109,16 +90,16 @@ export default function RegisterPage() {
       <div className="mx-auto max-w-2xl">
         <div className="mb-10 text-center">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
-            Member Registration
+            Role Registration
           </p>
 
           <h1 className="text-5xl font-extrabold text-slate-900">
-            Become a Member
+            Apply for Site Access
           </h1>
 
           <p className="mt-5 text-lg leading-8 text-slate-600">
-            Join Song Jeho Table Tennis Academy and connect with players,
-            coaches, tournaments, and community events.
+            Select the role that best matches your purpose for using this site.
+            All role applications require administrator approval before access is activated.
           </p>
         </div>
 
@@ -188,7 +169,7 @@ export default function RegisterPage() {
 
           <div>
             <label className="mb-2 block text-sm font-bold uppercase tracking-widest text-sky-600">
-              Membership Type
+              Account Role
             </label>
 
             <select
@@ -197,41 +178,16 @@ export default function RegisterPage() {
               onChange={handleChange}
               className="w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none transition focus:border-orange-400"
             >
-              {membershipTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
+              {accountRoles.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
                 </option>
               ))}
             </select>
 
-            {needsApproval && (
-              <p className="mt-3 rounded-2xl bg-orange-50 p-4 text-sm leading-6 text-orange-700">
-                Coach, sponsor, and admin roles require approval before special
-                permissions become active.
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-bold uppercase tracking-widest text-sky-600">
-              Skill Level
-            </label>
-
-            <select
-              name="skill_level"
-              value={formData.skill_level}
-              onChange={handleChange}
-              className="w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none transition focus:border-orange-400"
-            >
-              {skillLevels.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
-
-            <p className="mt-3 text-sm text-slate-500">
-              Skill level may be verified or adjusted by the academy later.
+            <p className="mt-3 rounded-2xl bg-orange-50 p-4 text-sm leading-6 text-orange-700">
+              Coach, Sponsor, Site Manager, and Association Representative roles
+              require administrator approval before permissions become active.
             </p>
           </div>
 
@@ -240,13 +196,13 @@ export default function RegisterPage() {
             disabled={loading}
             className="w-full rounded-2xl bg-orange-500 py-4 text-lg font-bold text-white transition hover:bg-orange-600 disabled:opacity-50"
           >
-            {loading ? "Submitting..." : "Create Account"}
+            {loading ? "Submitting..." : "Submit Role Application"}
           </button>
 
           <p className="text-center text-sm text-slate-500">
             Already have an account?{" "}
             <a
-              href="/members/login"
+              href="/admin"
               className="font-bold text-sky-700 hover:text-orange-500"
             >
               Login here

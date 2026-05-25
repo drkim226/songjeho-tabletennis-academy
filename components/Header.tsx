@@ -1,3 +1,5 @@
+"use client";
+
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
@@ -9,13 +11,9 @@ export default function Header() {
           Song Jeho Table Tennis Academy
         </a>
 
-        <nav className="hidden gap-6 text-sm font-semibold text-slate-700 md:flex">
+        <nav className="hidden gap-8 text-sm font-semibold text-slate-700 md:flex">
           <a href="/#about" className="hover:text-sky-600">
             About
-          </a>
-
-          <a href="/#membership" className="hover:text-sky-600">
-            Membership
           </a>
 
           <a href="/#coaching" className="hover:text-sky-600">
@@ -26,12 +24,11 @@ export default function Header() {
             Gallery
           </a>
 
-          <a href="/#news" className="hover:text-sky-600">
-            News
-          </a>
-
+         <a href="/#news" className="hover:text-sky-600">
+  News
+</a>
           <a href="/sponsors" className="hover:text-sky-600">
-            Sponsors
+            Partners
           </a>
 
           <a href="/#contact" className="hover:text-sky-600">

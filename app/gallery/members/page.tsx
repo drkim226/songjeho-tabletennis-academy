@@ -1,10 +1,9 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 
 export default function MemberGalleryPage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
-      <Header />
+     
 
       <section className="px-6 pb-24 pt-32">
         <div className="mx-auto max-w-5xl rounded-3xl bg-white p-10 text-center shadow-xl">
@@ -41,7 +40,7 @@ export default function MemberGalleryPage() {
         </div>
       </section>
 
-      <Footer />
+    
     </main>
   );
 }

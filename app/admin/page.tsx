@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 type Member = {
@@ -11,74 +10,131 @@ type Member = {
   phone: string;
   membership_type: string;
   role_approved: boolean;
-  skill_level: string;
-  skill_level_verified: boolean;
 };
 
+const roleOptions = [
+  "Coach",
+  "Sponsor",
+  "Site Manager",
+  "Association Representative",
+];
+
 export default function AdminPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [members, setMembers] = useState<Member[]>([]);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
-    loadAdminData();
+    checkAdmin();
   }, []);
 
-  const loadAdminData = async () => {
+  const checkAdmin = async () => {
+    setChecking(true);
+
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/members/login");
+      setIsAdmin(false);
+      setChecking(false);
       return;
     }
 
-    const { data: adminUser, error: adminError } = await supabase
+    const { data: adminUser } = await supabase
       .from("admin_users")
-      .select("*")
+      .select("id")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
-    if (adminError) {
-      alert("Admin check failed: " + adminError.message);
-      router.push("/members/profile");
-      return;
-    }
+    const { data: member } = await supabase
+      .from("members")
+      .select("membership_type, role_approved")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
 
-    if (!adminUser) {
-      alert("Admin access required.");
-      router.push("/members/profile");
+    const adminAccess =
+      !!adminUser ||
+      (member?.membership_type === "Admin" && member?.role_approved === true);
+
+    if (!adminAccess) {
+      setIsAdmin(false);
+      setChecking(false);
       return;
     }
 
     setIsAdmin(true);
+    await loadMembers();
+    setChecking(false);
+  };
 
+  const loadMembers = async () => {
     const { data, error } = await supabase
       .from("members")
-      .select("*")
+      .select("id, full_name, email, phone, membership_type, role_approved")
       .order("created_at", { ascending: false });
 
     if (error) {
-      alert("Could not load members: " + error.message);
-      console.error(error);
-      setLoading(false);
+      alert("Could not load accounts: " + error.message);
       return;
     }
 
     setMembers(data || []);
-    setLoading(false);
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setLoginLoading(false);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data: member } = await supabase
+      .from("members")
+      .select("membership_type, role_approved")
+      .eq("auth_user_id", user.id)
+      .single();
+
+    if (member?.membership_type === "Admin" && member?.role_approved) {
+      await checkAdmin();
+    } else {
+      window.location.href = "/members/profile";
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsAdmin(false);
+    setMembers([]);
   };
 
   const updateMember = async (
     id: number,
-    field: "role_approved" | "skill_level_verified",
-    value: boolean
+    updates: Partial<Pick<Member, "membership_type" | "role_approved">>
   ) => {
     const { error } = await supabase
       .from("members")
-      .update({ [field]: value })
+      .update(updates)
       .eq("id", id);
 
     if (error) {
@@ -87,95 +143,191 @@ export default function AdminPage() {
     }
 
     setMembers((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, [field]: value } : m))
+      prev.map((member) =>
+        member.id === id ? { ...member, ...updates } : member
+      )
     );
   };
 
-  if (loading) {
+  if (checking) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-24">
-        <p>Loading admin dashboard...</p>
+      <main className="min-h-screen bg-slate-50 px-6 py-24 text-slate-800">
+        <p>Checking admin access...</p>
       </main>
     );
   }
 
-  if (!isAdmin) return null;
+  if (!isAdmin) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-orange-50 px-6 py-20 text-slate-800">
+        <div className="mx-auto max-w-md rounded-3xl bg-white p-10 shadow-2xl">
+          <div className="mb-10 text-center">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
+              Admin Access
+            </p>
+
+            <h1 className="mb-3 text-4xl font-extrabold text-slate-900">
+              Login Required
+            </h1>
+
+            <p className="text-slate-500">
+              Please sign in with an approved admin account.
+            </p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Email
+              </label>
+
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:border-sky-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold text-slate-700">
+                Password
+              </label>
+
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:border-sky-500"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full rounded-2xl bg-sky-600 py-4 text-lg font-bold text-white hover:bg-sky-700 disabled:opacity-50"
+            >
+              {loginLoading ? "Logging in..." : "Login"}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-slate-500">
+            Need access?{" "}
+            <a
+              href="/members/register"
+              className="font-bold text-sky-700 hover:text-orange-500"
+            >
+              Apply for Site Access
+            </a>
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 px-6 py-24 text-slate-800">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-10">
-          <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
-            Admin Dashboard
-          </p>
+        <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
+              Admin Dashboard
+            </p>
 
-          <h1 className="text-5xl font-extrabold text-slate-900">
-            Member Management
-          </h1>
+            <h1 className="text-5xl font-extrabold text-slate-900">
+              Account Role Management
+            </h1>
+
+            <a
+              href="/admin/rating"
+              className="mt-6 inline-block rounded-full bg-sky-600 px-8 py-4 font-bold text-white hover:bg-sky-700"
+            >
+              Manage Rating Applications
+            </a>
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="rounded-full bg-orange-500 px-6 py-3 font-bold text-white hover:bg-orange-600"
+          >
+            Logout
+          </button>
         </div>
 
         <div className="overflow-x-auto rounded-3xl bg-white shadow-2xl">
-          <table className="w-full min-w-[1000px] text-left">
+          <table className="w-full min-w-[950px] text-left">
             <thead className="bg-slate-900 text-white">
               <tr>
                 <th className="p-4">Name</th>
                 <th className="p-4">Email</th>
                 <th className="p-4">Phone</th>
-                <th className="p-4">Type</th>
-                <th className="p-4">Level</th>
-                <th className="p-4">Role Approved</th>
-                <th className="p-4">Level Verified</th>
+                <th className="p-4">Account Role</th>
+                <th className="p-4">Approval</th>
               </tr>
             </thead>
 
             <tbody>
-              {members.map((member) => (
-                <tr key={member.id} className="border-b border-slate-100">
-                  <td className="p-4 font-bold">{member.full_name}</td>
-                  <td className="p-4">{member.email}</td>
-                  <td className="p-4">{member.phone}</td>
-                  <td className="p-4">{member.membership_type}</td>
-                  <td className="p-4">{member.skill_level}</td>
+              {members.map((member) => {
+                const isProtectedAdmin = member.membership_type === "Admin";
 
-                  <td className="p-4">
-                    <button
-                      onClick={() =>
-                        updateMember(
-                          member.id,
-                          "role_approved",
-                          !member.role_approved
-                        )
-                      }
-                      className={`rounded-full px-4 py-2 font-bold ${
-                        member.role_approved
-                          ? "bg-green-100 text-green-700"
-                          : "bg-orange-100 text-orange-700"
-                      }`}
-                    >
-                      {member.role_approved ? "Approved" : "Pending"}
-                    </button>
-                  </td>
+                return (
+                  <tr key={member.id} className="border-b border-slate-100">
+                    <td className="p-4 font-bold">{member.full_name}</td>
+                    <td className="p-4">{member.email}</td>
+                    <td className="p-4">{member.phone || "N/A"}</td>
 
-                  <td className="p-4">
-                    <button
-                      onClick={() =>
-                        updateMember(
-                          member.id,
-                          "skill_level_verified",
-                          !member.skill_level_verified
-                        )
-                      }
-                      className={`rounded-full px-4 py-2 font-bold ${
-                        member.skill_level_verified
-                          ? "bg-sky-100 text-sky-700"
-                          : "bg-slate-100 text-slate-600"
-                      }`}
-                    >
-                      {member.skill_level_verified ? "Verified" : "Not Verified"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    <td className="p-4">
+                      {isProtectedAdmin ? (
+                        <span className="rounded-full bg-slate-900 px-4 py-2 font-bold text-white">
+                          Admin
+                        </span>
+                      ) : (
+                        <select
+                          value={member.membership_type}
+                          onChange={(e) =>
+                            updateMember(member.id, {
+                              membership_type: e.target.value,
+                              role_approved: false,
+                            })
+                          }
+                          className="rounded-xl border border-slate-300 px-4 py-3"
+                        >
+                          {roleOptions.map((role) => (
+                            <option key={role} value={role}>
+                              {role}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+
+                    <td className="p-4">
+                      {isProtectedAdmin ? (
+                        <span className="rounded-full bg-green-100 px-4 py-2 font-bold text-green-700">
+                          Approved
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() =>
+                            updateMember(member.id, {
+                              role_approved: !member.role_approved,
+                            })
+                          }
+                          className={`rounded-full px-4 py-2 font-bold ${
+                            member.role_approved
+                              ? "bg-green-100 text-green-700"
+                              : "bg-orange-100 text-orange-700"
+                          }`}
+                        >
+                          {member.role_approved ? "Approved" : "Pending"}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

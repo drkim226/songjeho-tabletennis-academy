@@ -27,7 +27,7 @@ export default function EditProfilePage() {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      router.push("/members/login");
+      router.push("/admin");
       return;
     }
 
@@ -47,7 +47,6 @@ export default function EditProfilePage() {
     setMemberId(data.id);
     setFullName(data.full_name || "");
     setPhone(data.phone || "");
-    setSkillLevel(data.skill_level || "beginner");
     setAvatarUrl(data.avatar_url || "");
     setLoading(false);
   };
@@ -82,7 +81,6 @@ export default function EditProfilePage() {
       .update({
         full_name: fullName,
         phone,
-        skill_level: skillLevel,
         avatar_url: avatarUrl,
       })
       .eq("id", memberId);

@@ -17,6 +17,8 @@ const galleryCategories = [
 ];
 
 export default function AdminGalleryPage() {
+  const [checkingAccess, setCheckingAccess] = useState(true);
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const [category, setCategory] = useState("history");
 
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -31,10 +33,42 @@ export default function AdminGalleryPage() {
   const [sortOrder, setSortOrder] = useState(1);
   const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    loadAlbums();
-  }, []);
+ useEffect(() => {
+  checkAccess();
+}, []);
 
+const checkAccess = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    window.location.href = "/admin";
+    return;
+  }
+
+  const { data } = await supabase
+    .from("members")
+    .select("membership_type, role_approved")
+    .eq("auth_user_id", user.id)
+    .single();
+
+  const allowedRoles = ["Admin", "Site Manager"];
+
+  if (
+    !data ||
+    !allowedRoles.includes(data.membership_type) ||
+    !data.role_approved
+  ) {
+    alert("Access denied");
+    window.location.href = "/members/profile";
+    return;
+  }
+
+  await loadAlbums();
+
+  setCheckingAccess(false);
+};
   const loadAlbums = async () => {
     const { data, error } = await supabase
       .from("gallery_albums")
@@ -181,6 +215,16 @@ export default function AdminGalleryPage() {
     setDescription("");
     setSortOrder(sortOrder + files.length);
   };
+
+  if (checkingAccess) {
+  return (
+    <main className="min-h-screen flex items-center justify-center">
+      <p className="text-xl font-bold">
+        Checking permissions...
+      </p>
+    </main>
+  );
+}
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-orange-50 px-6 py-20 text-slate-800">

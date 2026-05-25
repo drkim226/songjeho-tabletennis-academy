@@ -1,4 +1,48 @@
+"use client";
+
+import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+
 export default function Contact() {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+
+    const { error } = await supabase.from("contact_messages").insert({
+      name: formData.name,
+      email: formData.email,
+      subject: formData.subject,
+      message: formData.message,
+      status: "new",
+    });
+
+    setSending(false);
+
+    if (error) {
+      alert("Message failed: " + error.message);
+      return;
+    }
+
+    alert("Your message has been sent.");
+    setShowEmailModal(false);
+    setFormData({
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    });
+  };
+
   return (
     <section id="contact" className="bg-gradient-to-br from-sky-50 to-white py-24">
       <div className="mx-auto max-w-6xl px-6">
@@ -42,12 +86,13 @@ export default function Contact() {
                 <p className="mb-2 text-sm font-bold uppercase tracking-widest text-sky-600">
                   Email
                 </p>
-                <a
-                  href="mailto:songjehotta@gmail.com"
-                  className="text-sky-700 hover:text-orange-500"
+                <button
+                  type="button"
+                  onClick={() => setShowEmailModal(true)}
+                  className="text-left text-sky-700 hover:text-orange-500 hover:underline"
                 >
                   songjehotta@gmail.com
-                </a>
+                </button>
               </div>
 
               <div>
@@ -56,13 +101,18 @@ export default function Contact() {
                 </p>
 
                 <div className="space-y-2 leading-8">
-                  <p><span className="font-semibold">Saturday:</span> 8:00 AM – 6:00 PM</p>
-                  <p><span className="font-semibold">Sunday:</span> Closed</p>
-                  <p><span className="font-semibold">Monday-Friday:</span> 8:00 AM – 8:00 PM</p>
+                  <p>
+                    <span className="font-semibold">Saturday:</span> 8:00 AM – 6:00 PM
+                  </p>
+                  <p>
+                    <span className="font-semibold">Sunday:</span> Closed
+                  </p>
+                  <p>
+                    <span className="font-semibold">Monday-Friday:</span> 8:00 AM – 8:00 PM
+                  </p>
                 </div>
               </div>
 
-              {/* Holiday Closures */}
               <div className="border-t border-slate-200 pt-6">
                 <p className="mb-3 text-sm font-bold uppercase tracking-widest text-orange-500">
                   Holiday Closures
@@ -71,26 +121,20 @@ export default function Contact() {
                 <div className="flex flex-wrap gap-x-3 gap-y-2 text-sm leading-relaxed text-slate-500">
                   <span>New Year's Day</span>
                   <span>•</span>
-
                   <span>Memorial Day</span>
                   <span>•</span>
-
                   <span>Independence Day</span>
                   <span>•</span>
-
                   <span>Labor Day</span>
                   <span>•</span>
-
                   <span>Thanksgiving Day</span>
                   <span>•</span>
-
                   <span>Christmas Day</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Custom SVG Map */}
           <div className="rounded-3xl bg-white p-8 shadow-2xl">
             <h3 className="mb-6 text-3xl font-bold text-slate-900">
               Location Map
@@ -105,19 +149,16 @@ export default function Contact() {
               >
                 <rect width="700" height="520" fill="#f8fafc" />
 
-                {/* Main roads */}
                 <line x1="80" y1="120" x2="620" y2="120" stroke="#cbd5e1" strokeWidth="34" strokeLinecap="round" />
                 <line x1="110" y1="320" x2="640" y2="250" stroke="#cbd5e1" strokeWidth="34" strokeLinecap="round" />
                 <line x1="210" y1="60" x2="210" y2="455" stroke="#cbd5e1" strokeWidth="30" strokeLinecap="round" />
                 <line x1="430" y1="80" x2="430" y2="455" stroke="#cbd5e1" strokeWidth="30" strokeLinecap="round" />
 
-                {/* Smaller roads */}
                 <line x1="90" y1="220" x2="610" y2="220" stroke="#e2e8f0" strokeWidth="22" strokeLinecap="round" />
                 <line x1="120" y1="410" x2="560" y2="360" stroke="#e2e8f0" strokeWidth="22" strokeLinecap="round" />
                 <line x1="320" y1="70" x2="320" y2="440" stroke="#e2e8f0" strokeWidth="22" strokeLinecap="round" />
                 <line x1="540" y1="100" x2="540" y2="420" stroke="#e2e8f0" strokeWidth="22" strokeLinecap="round" />
 
-                {/* Road labels */}
                 <text x="95" y="105" fill="#475569" fontSize="20" fontWeight="700">
                   Olympic Blvd
                 </text>
@@ -131,7 +172,6 @@ export default function Contact() {
                   Vermont Ave
                 </text>
 
-                {/* Nearby labels */}
                 <text x="95" y="255" fill="#64748b" fontSize="16">
                   Koreatown Area
                 </text>
@@ -142,7 +182,6 @@ export default function Contact() {
                   Parking Nearby
                 </text>
 
-                {/* Club marker */}
                 <circle cx="210" cy="220" r="22" fill="#f97316" />
                 <circle cx="210" cy="220" r="38" fill="#f97316" opacity="0.18" />
                 <text x="245" y="213" fill="#0f172a" fontSize="22" fontWeight="800">
@@ -152,7 +191,6 @@ export default function Contact() {
                   Table Tennis Club
                 </text>
 
-                {/* Address box */}
                 <rect x="80" y="440" width="540" height="56" rx="18" fill="#ffffff" stroke="#cbd5e1" />
                 <text x="105" y="475" fill="#0f172a" fontSize="20" fontWeight="700">
                   1049 S Grand View St, Los Angeles, CA 90006
@@ -170,6 +208,75 @@ export default function Contact() {
           </div>
         </div>
       </div>
+
+      {showEmailModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-8 shadow-2xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-2xl font-extrabold text-slate-900">
+                Send Message
+              </h3>
+
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="rounded-full bg-slate-900 px-4 py-2 font-bold text-white hover:bg-orange-500"
+              >
+                X
+              </button>
+            </div>
+
+            <form onSubmit={sendMessage} className="space-y-4">
+              <input
+                required
+                placeholder="Your name"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="w-full rounded-2xl border border-slate-200 px-5 py-4"
+              />
+
+              <input
+                required
+                type="email"
+                placeholder="Your email"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
+                className="w-full rounded-2xl border border-slate-200 px-5 py-4"
+              />
+
+              <input
+                placeholder="Subject"
+                value={formData.subject}
+                onChange={(e) =>
+                  setFormData({ ...formData, subject: e.target.value })
+                }
+                className="w-full rounded-2xl border border-slate-200 px-5 py-4"
+              />
+
+              <textarea
+                required
+                rows={5}
+                placeholder="Message"
+                value={formData.message}
+                onChange={(e) =>
+                  setFormData({ ...formData, message: e.target.value })
+                }
+                className="w-full rounded-2xl border border-slate-200 px-5 py-4"
+              />
+
+              <button
+                disabled={sending}
+                className="w-full rounded-2xl bg-sky-600 py-4 font-bold text-white hover:bg-sky-700 disabled:bg-slate-400"
+              >
+                {sending ? "Sending..." : "Send Message"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

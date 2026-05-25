@@ -1,5 +1,4 @@
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+
 import PhotoMasonryGallery from "@/components/PhotoMasonryGallery";
 import { supabase } from "@/lib/supabase";
 
@@ -21,7 +20,7 @@ export default async function TournamentAlbumPage({
   if (albumError || !album) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-800">
-        <Header />
+       
 
         <section className="px-6 pb-24 pt-32">
           <div className="mx-auto max-w-3xl rounded-3xl bg-white p-10 shadow-xl">
@@ -38,7 +37,7 @@ export default async function TournamentAlbumPage({
           </div>
         </section>
 
-        <Footer />
+       
       </main>
     );
   }
@@ -55,7 +54,7 @@ export default async function TournamentAlbumPage({
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
-      <Header />
+    
 
       <section className="px-6 pb-24 pt-32">
         <div className="mx-auto max-w-7xl">
@@ -97,7 +96,7 @@ export default async function TournamentAlbumPage({
         </div>
       </section>
 
-      <Footer />
+  
     </main>
   );
 }
