@@ -17,7 +17,7 @@ const galleryCategories = [
 ];
 
 export default function AdminGalleryPage() {
-  const [checkingAccess, setCheckingAccess] = useState(true);
+
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [category, setCategory] = useState("history");
 
