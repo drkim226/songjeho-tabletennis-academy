@@ -17,15 +17,21 @@ type Coach = {
   active: boolean;
 };
 
-function getYouTubeEmbedUrl(url: string) {
+function getYouTubeEmbedUrl(url: string): string {
   if (url.includes("youtube.com/watch?v=")) {
     const videoId = url.split("v=")[1]?.split("&")[0];
-    return `https://www.youtube.com/embed/${videoId}`;
+
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
   }
 
   if (url.includes("youtu.be/")) {
     const videoId = url.split("youtu.be/")[1]?.split("?")[0];
-    return `https://www.youtube.com/embed/${videoId}`;
+
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
   }
 
   if (url.includes("youtube.com/embed/")) {
@@ -42,12 +48,14 @@ export default async function CoachProfilePage({
 }) {
   const { slug } = await params;
 
-  const { data: coach, error } = await supabase
+  const { data, error } = await supabase
     .from("coaches")
     .select("*")
     .eq("slug", decodeURIComponent(slug))
     .eq("active", true)
     .single();
+
+  const coach = data as Coach | null;
 
   if (error || !coach) {
     return (
@@ -70,19 +78,28 @@ export default async function CoachProfilePage({
     );
   }
 
-  const videos = (coach.video_urls || []).filter(Boolean).slice(0, 3);
+  const videos: string[] = (coach.video_urls ?? [])
+    .filter(
+      (video): video is string =>
+        typeof video === "string" && video.trim().length > 0
+    )
+    .slice(0, 3);
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
       <section className="px-6 pb-24 pt-32">
         <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-[1fr_1.2fr]">
-          <div className="overflow-hidden rounded-3xl bg-white shadow-xl h-fit">
-            {coach.image && (
+          <div className="h-fit overflow-hidden rounded-3xl bg-white shadow-xl">
+            {coach.image ? (
               <img
                 src={coach.image}
                 alt={coach.name}
                 className="h-[420px] w-full rounded-3xl object-cover"
               />
+            ) : (
+              <div className="flex h-[420px] items-center justify-center bg-slate-200 text-slate-500">
+                No coach image
+              </div>
             )}
           </div>
 
@@ -110,7 +127,7 @@ export default async function CoachProfilePage({
             )}
 
             {coach.style && (
-              <p className="mb-8 text-lg leading-8 text-slate-700">
+              <p className="mb-8 whitespace-pre-line text-lg leading-8 text-slate-700">
                 {coach.style}
               </p>
             )}
@@ -125,9 +142,20 @@ export default async function CoachProfilePage({
         </div>
 
         <div className="mx-auto mt-10 grid max-w-6xl gap-10 md:grid-cols-3">
-          <InfoCard title="Coaching & Leadership" items={coach.experience || []} />
-          <InfoCard title="Elite Career" items={coach.elite_career || []} />
-          <InfoCard title="Recommended For" items={coach.recommended_for || []} />
+          <InfoCard
+            title="Coaching & Leadership"
+            items={coach.experience ?? []}
+          />
+
+          <InfoCard
+            title="Elite Career"
+            items={coach.elite_career ?? []}
+          />
+
+          <InfoCard
+            title="Recommended For"
+            items={coach.recommended_for ?? []}
+          />
         </div>
 
         {videos.length > 0 && (
@@ -137,14 +165,14 @@ export default async function CoachProfilePage({
             </h2>
 
             <div className="grid gap-6 md:grid-cols-3">
-              {videos.map((video) => (
+              {videos.map((video: string) => (
                 <div
                   key={video}
                   className="overflow-hidden rounded-3xl bg-slate-100 shadow"
                 >
                   <iframe
                     src={getYouTubeEmbedUrl(video)}
-                    title="Coach video"
+                    title={`Coach video: ${coach.name}`}
                     className="aspect-video w-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
@@ -168,8 +196,16 @@ export default async function CoachProfilePage({
   );
 }
 
-function InfoCard({ title, items }: { title: string; items: string[] }) {
-  if (!items || items.length === 0) return null;
+function InfoCard({
+  title,
+  items,
+}: {
+  title: string;
+  items: string[];
+}) {
+  if (items.length === 0) {
+    return null;
+  }
 
   return (
     <div className="rounded-3xl bg-white p-10 shadow-xl">
@@ -177,13 +213,13 @@ function InfoCard({ title, items }: { title: string; items: string[] }) {
         {title}
       </h2>
 
-     <ul className="list-disc space-y-4 pl-6 text-lg leading-8 text-slate-700">
-  {items.map((item) => (
-    <li key={item} className="pl-1">
-      {item}
-    </li>
-  ))}
-</ul>
+      <ul className="list-disc space-y-4 pl-6 text-lg leading-8 text-slate-700">
+        {items.map((item: string) => (
+          <li key={item} className="pl-1">
+            {item}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
