@@ -11,10 +11,10 @@ type Sponsor = {
   description: string | null;
   offer: string | null;
   phone: string | null;
+  email: string | null;
   website: string | null;
   address: string | null;
   logo_image: string | null;
-  banner_image: string | null;
   featured: boolean;
   active: boolean;
   sort_order: number | null;
@@ -24,7 +24,6 @@ export default function AdminSponsorsPage() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
@@ -32,10 +31,10 @@ export default function AdminSponsorsPage() {
   const [description, setDescription] = useState("");
   const [offer, setOffer] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [address, setAddress] = useState("");
   const [logoImage, setLogoImage] = useState("");
-  const [bannerImage, setBannerImage] = useState("");
   const [featured, setFeatured] = useState(false);
 
   useEffect(() => {
@@ -65,14 +64,14 @@ export default function AdminSponsorsPage() {
     setDescription("");
     setOffer("");
     setPhone("");
+    setEmail("");
     setWebsite("");
     setAddress("");
     setLogoImage("");
-    setBannerImage("");
     setFeatured(false);
   };
 
-  const uploadImage = async (file: File, type: "logo" | "banner") => {
+  const uploadImage = async (file: File) => {
     setUploading(true);
 
     const fileExt = file.name.split(".").pop();
@@ -80,7 +79,7 @@ export default function AdminSponsorsPage() {
       .toString(36)
       .substring(2)}.${fileExt}`;
 
-    const filePath = `${type}/${fileName}`;
+    const filePath = `main/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("sponsor-images")
@@ -96,18 +95,13 @@ export default function AdminSponsorsPage() {
       .from("sponsor-images")
       .getPublicUrl(filePath);
 
-    if (type === "logo") {
-      setLogoImage(data.publicUrl);
-    } else {
-      setBannerImage(data.publicUrl);
-    }
-
+    setLogoImage(data.publicUrl);
     setUploading(false);
   };
 
   const saveSponsor = async () => {
     if (!name.trim()) {
-      alert("Sponsor name is required.");
+      alert("Partner name is required.");
       return;
     }
 
@@ -117,10 +111,10 @@ export default function AdminSponsorsPage() {
       description,
       offer,
       phone,
+      email,
       website,
       address,
       logo_image: logoImage,
-      banner_image: bannerImage,
       featured,
     };
 
@@ -158,10 +152,10 @@ export default function AdminSponsorsPage() {
     setDescription(sponsor.description || "");
     setOffer(sponsor.offer || "");
     setPhone(sponsor.phone || "");
+    setEmail(sponsor.email || "");
     setWebsite(sponsor.website || "");
     setAddress(sponsor.address || "");
     setLogoImage(sponsor.logo_image || "");
-    setBannerImage(sponsor.banner_image || "");
     setFeatured(sponsor.featured || false);
 
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -196,7 +190,7 @@ export default function AdminSponsorsPage() {
   };
 
   const deleteSponsor = async (id: string) => {
-    const ok = confirm("Delete this sponsor?");
+    const ok = confirm("Delete this partner?");
     if (!ok) return;
 
     const { error } = await supabase.from("sponsors").delete().eq("id", id);
@@ -222,28 +216,28 @@ export default function AdminSponsorsPage() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-10">
           <p className="mb-3 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
-            Admin Sponsors
+            Admin Partners
           </p>
 
           <h1 className="text-5xl font-extrabold text-slate-900">
-            Sponsor Management
+            Partner Management
           </h1>
 
           <p className="mt-4 text-slate-600">
-            Create and manage sponsor businesses shown on the Sponsors page.
+            Create and manage community partners shown on the Partners page.
           </p>
         </div>
 
         <div className="mb-12 rounded-3xl bg-white p-8 shadow-xl">
           <h2 className="mb-6 text-2xl font-extrabold text-slate-900">
-            {editingId ? "Edit Sponsor" : "Create Sponsor"}
+            {editingId ? "Edit Partner" : "Create Partner"}
           </h2>
 
           <div className="space-y-4">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Sponsor name"
+              placeholder="Partner name"
               className="w-full rounded-2xl border border-slate-200 px-5 py-4"
             />
 
@@ -265,7 +259,7 @@ export default function AdminSponsorsPage() {
             <input
               value={offer}
               onChange={(e) => setOffer(e.target.value)}
-              placeholder="Sponsor Spotlight"
+              placeholder="Partner Introduction"
               className="w-full rounded-2xl border border-slate-200 px-5 py-4"
             />
 
@@ -273,6 +267,13 @@ export default function AdminSponsorsPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Phone"
+              className="w-full rounded-2xl border border-slate-200 px-5 py-4"
+            />
+
+            <input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="E-mail"
               className="w-full rounded-2xl border border-slate-200 px-5 py-4"
             />
 
@@ -292,15 +293,14 @@ export default function AdminSponsorsPage() {
 
             <div>
               <label className="mb-2 block font-bold text-sky-700">
-                Logo Image
+                Main Image
               </label>
-              <p className="mb-3 text-sm text-slate-500">
-  Recommended: square image, 600 × 600 px or larger.
-</p>
+
+             
 
               <label className="block cursor-pointer rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-sky-500 hover:bg-sky-50">
                 <span className="font-medium text-slate-700">
-                  Click to select logo image
+                  Click to select main image
                 </span>
 
                 <input
@@ -308,7 +308,7 @@ export default function AdminSponsorsPage() {
                   accept="image/*"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    if (file) uploadImage(file, "logo");
+                    if (file) uploadImage(file);
                   }}
                   className="hidden"
                 />
@@ -318,43 +318,8 @@ export default function AdminSponsorsPage() {
                 <div className="mt-4 flex justify-center">
                   <img
                     src={logoImage}
-                    alt="Logo preview"
-                    className="max-h-[220px] max-w-full rounded-2xl object-contain"
-                  />
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-2 block font-bold text-sky-700">
-                Banner Image
-              </label>
-              <p className="mb-3 text-sm text-slate-500">
-  Recommended: wide image, 1600 × 600 px or larger.
-</p>
-
-              <label className="block cursor-pointer rounded-2xl border border-slate-200 px-5 py-4 transition hover:border-sky-500 hover:bg-sky-50">
-                <span className="font-medium text-slate-700">
-                  Click to select banner image
-                </span>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) uploadImage(file, "banner");
-                  }}
-                  className="hidden"
-                />
-              </label>
-
-              {bannerImage && (
-                <div className="mt-4 flex justify-center">
-                  <img
-                    src={bannerImage}
-                    alt="Banner preview"
-                    className="max-h-[320px] max-w-full rounded-2xl object-contain"
+                    alt="Main image preview"
+                    className="max-h-[260px] max-w-full rounded-2xl object-contain"
                   />
                 </div>
               )}
@@ -371,7 +336,7 @@ export default function AdminSponsorsPage() {
                 onChange={(e) => setFeatured(e.target.checked)}
               />
               <span className="font-bold text-slate-700">
-                Featured Sponsor
+                Featured Partner
               </span>
             </label>
 
@@ -381,7 +346,7 @@ export default function AdminSponsorsPage() {
                 disabled={uploading}
                 className="rounded-full bg-sky-600 px-8 py-4 font-bold text-white hover:bg-sky-700 disabled:bg-slate-400"
               >
-                {editingId ? "Update Sponsor" : "Create Sponsor"}
+                {editingId ? "Update Sponsor" : "Create Partner"}
               </button>
 
               {editingId && (
@@ -399,7 +364,7 @@ export default function AdminSponsorsPage() {
         <div className="space-y-6">
           {sponsors.length === 0 && (
             <p className="rounded-3xl bg-white p-8 text-center text-slate-500 shadow-xl">
-              No sponsors yet.
+              No partners yet.
             </p>
           )}
 
@@ -443,27 +408,13 @@ export default function AdminSponsorsPage() {
                 </div>
               </div>
 
-              {(sponsor.logo_image || sponsor.banner_image) && (
-                <div className="mt-5 grid gap-4 md:grid-cols-2">
-                  {sponsor.logo_image && (
-                    <div className="flex justify-center rounded-2xl bg-white p-4">
-                      <img
-                        src={sponsor.logo_image}
-                        alt={sponsor.name}
-                        className="max-h-[180px] max-w-full object-contain"
-                      />
-                    </div>
-                  )}
-
-                  {sponsor.banner_image && (
-                    <div className="flex justify-center rounded-2xl bg-white p-4">
-                      <img
-                        src={sponsor.banner_image}
-                        alt={sponsor.name}
-                        className="max-h-[180px] max-w-full object-contain"
-                      />
-                    </div>
-                  )}
+              {sponsor.logo_image && (
+                <div className="mt-5 flex justify-center rounded-2xl bg-white p-4">
+                  <img
+                    src={sponsor.logo_image}
+                    alt={sponsor.name}
+                    className="max-h-[180px] max-w-full object-contain"
+                  />
                 </div>
               )}
 

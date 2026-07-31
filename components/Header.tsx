@@ -1,39 +1,46 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <a
-          href="/"
-          className="text-2xl font-black text-slate-900 transition hover:text-sky-600"
-        >
-          Song Jeho Table Tennis Academy
-        </a>
+
+       <Link
+  href="/"
+  prefetch={true}
+  className="text-2xl font-black text-slate-900 transition hover:text-sky-600"
+>
+  Song Jeho Table Tennis Academy
+</Link>
 
         <nav className="hidden gap-8 text-sm font-semibold text-slate-700 md:flex">
-          <a href="/#about" className="hover:text-sky-600">
+
+          <Link href="/#about" className="hover:text-sky-600">
             About
-          </a>
+          </Link>
 
-          <a href="/#coaching" className="hover:text-sky-600">
+          <Link href="/#coaching" className="hover:text-sky-600">
             Coaching
-          </a>
+          </Link>
 
-          <a href="/#gallery" className="hover:text-sky-600">
+          <Link href="/#gallery" className="hover:text-sky-600">
             Gallery
-          </a>
+          </Link>
 
-         <a href="/#news" className="hover:text-sky-600">
-  News
-</a>
-          <a href="/sponsors" className="hover:text-sky-600">
+          <Link href="/#news" className="hover:text-sky-600">
+            News
+          </Link>
+
+          <Link href="/sponsors" className="hover:text-sky-600">
             Partners
-          </a>
+          </Link>
 
-          <a href="/#contact" className="hover:text-sky-600">
+          <Link href="/#contact" className="hover:text-sky-600">
             Contact
-          </a>
+          </Link>
+
         </nav>
       </div>
     </header>

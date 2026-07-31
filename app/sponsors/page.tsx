@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -10,10 +10,10 @@ type Sponsor = {
   description: string | null;
   offer: string | null;
   phone: string | null;
+  email: string | null;
   website: string | null;
   address: string | null;
   logo_image: string | null;
-  banner_image: string | null;
   featured: boolean;
   active: boolean;
   sort_order: number | null;
@@ -23,6 +23,7 @@ export default function SponsorsPage() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSponsor, setSelectedSponsor] = useState<Sponsor | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     loadSponsors();
@@ -45,8 +46,8 @@ export default function SponsorsPage() {
     setLoading(false);
   };
 
-  const featuredSponsor = sponsors.find((sponsor) => sponsor.featured);
-  const otherSponsors = sponsors.filter((sponsor) => !sponsor.featured);
+  const featuredSponsors = sponsors.filter((sponsor) => sponsor.featured);
+const otherSponsors = sponsors.filter((sponsor) => !sponsor.featured);
 
   if (loading) {
     return (
@@ -70,87 +71,95 @@ export default function SponsorsPage() {
             </p>
 
             <h1 className="text-5xl font-black text-slate-900 md:text-6xl">
-             Our Community Partners
-
+              Our Community Partners
             </h1>
 
             <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-              Supporting the growth of table tennis through
-our valued sponsors and community supporters.
+              Supporting the growth of table tennis through our valued sponsors
+              and community supporters.
             </p>
           </div>
 
-          {featuredSponsor && (
-            <button
-              onClick={() => setSelectedSponsor(featuredSponsor)}
-              className="group mb-14 grid w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-2xl transition duration-300 hover:-translate-y-2 md:grid-cols-[0.9fr_1.1fr]"
-            >
-              <div className="flex min-h-[340px] items-center justify-center bg-gradient-to-br from-sky-600 to-blue-800 p-10 text-white">
-                {featuredSponsor.logo_image ? (
-                  <img
-                    src={featuredSponsor.logo_image}
-                    alt={featuredSponsor.name}
-                    className="max-h-56 max-w-full rounded-3xl object-contain"
-                  />
-                ) : (
-                  <div className="text-6xl">🤝</div>
-                )}
-              </div>
-
-              <div className="p-10">
-                <p className="mb-4 inline-block rounded-full bg-orange-100 px-4 py-2 text-sm font-bold text-orange-600">
-                  Featured Sponsor
-                </p>
-
-                <h2 className="text-4xl font-black text-slate-900">
-                  {featuredSponsor.name}
-                </h2>
-
-                {featuredSponsor.tagline && (
-                  <p className="mt-4 text-xl font-bold text-sky-700">
-                    {featuredSponsor.tagline}
-                  </p>
-                )}
-
-                {featuredSponsor.description && (
-                  <p className="mt-5 text-lg leading-8 text-slate-600">
-                    {featuredSponsor.description}
-                  </p>
-                )}
-
-                {featuredSponsor.offer && (
-                  <div className="mt-6 rounded-2xl bg-orange-50 p-5">
-                    <p className="font-bold text-orange-600">Sponsor Spotlight</p>
-                    <p className="mt-2 text-slate-700">
-                      {featuredSponsor.offer}
-                    </p>
-                  </div>
-                )}
-
-                <p className="mt-8 font-bold text-sky-700 group-hover:text-orange-500">
-                  View Business Details →
-                </p>
-              </div>
-            </button>
+          {featuredSponsors.length > 0 && (
+  <div className="mb-14 space-y-8">
+    {featuredSponsors.map((featuredSponsor) => (
+      <button
+        key={featuredSponsor.id}
+        onClick={() => setSelectedSponsor(featuredSponsor)}
+        className="group grid w-full overflow-hidden rounded-[2rem] bg-white text-left shadow-2xl transition duration-300 hover:-translate-y-2 md:grid-cols-[0.9fr_1.1fr]"
+      >
+        <div className="flex min-h-[340px] items-center justify-center bg-white p-10">
+          {featuredSponsor.logo_image ? (
+            <img
+              src={featuredSponsor.logo_image}
+              alt={featuredSponsor.name}
+              className="max-h-72 max-w-full rounded-3xl object-contain"
+            />
+          ) : (
+            <div className="text-6xl">🤝</div>
           )}
+        </div>
+
+        <div className="p-10">
+          <p className="mb-4 inline-block rounded-full bg-orange-100 px-4 py-2 text-sm font-bold text-orange-600">
+            Featured Partner
+          </p>
+
+          <h2 className="text-4xl font-black text-slate-900">
+            {featuredSponsor.name}
+          </h2>
+
+          {featuredSponsor.tagline && (
+            <p className="mt-4 text-xl font-bold text-sky-700">
+              {featuredSponsor.tagline}
+            </p>
+          )}
+
+          {featuredSponsor.description && (
+            <p className="mt-5 text-lg leading-8 text-slate-600">
+              {featuredSponsor.description}
+            </p>
+          )}
+
+          {featuredSponsor.offer && (
+            <div className="mt-6 rounded-2xl bg-orange-50 p-5">
+              <p className="font-bold text-orange-600">
+                Partner Introduction
+              </p>
+
+              <p className="mt-2 text-slate-700">
+                {featuredSponsor.offer}
+              </p>
+            </div>
+          )}
+
+          <p className="mt-8 font-bold text-sky-700 group-hover:text-orange-500">
+            View Partner Details →
+          </p>
+        </div>
+      </button>
+    ))}
+  </div>
+)}
 
           <div className="mb-10 flex items-end justify-between gap-6">
             <div>
               <p className="mb-2 text-sm font-bold uppercase tracking-[0.3em] text-orange-500">
-                Business Directory
+                Community Partners
               </p>
 
               <h2 className="text-4xl font-black text-slate-900">
-                Our Sponsors
+                Our Partners
               </h2>
             </div>
 
-            <a
-              href="/#contact"
-              className="hidden rounded-full bg-sky-600 px-6 py-3 font-bold text-white hover:bg-sky-700 md:inline-block"
-            >
-              Become a Sponsor
-            </a>
+           <button
+  type="button"
+  onClick={() => router.push("/#contact")}
+  className="hidden rounded-full bg-sky-600 px-6 py-3 font-bold text-white hover:bg-sky-700 md:inline-block"
+>
+  Become a Partner
+</button>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
@@ -163,7 +172,7 @@ our valued sponsors and community supporters.
                 <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-sky-100 transition group-hover:scale-125" />
                 <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-orange-100 transition group-hover:scale-125" />
 
-                <div className="relative mb-6 flex h-28 items-center justify-center rounded-3xl bg-white p-4 shadow-inner">
+                <div className="relative mb-6 flex h-36 items-center justify-center rounded-3xl bg-white p-4 shadow-inner">
                   {sponsor.logo_image ? (
                     <img
                       src={sponsor.logo_image}
@@ -198,24 +207,67 @@ our valued sponsors and community supporters.
             ))}
           </div>
 
-          <div className="mt-16 overflow-hidden rounded-[2rem] bg-slate-900 p-10 text-center text-white shadow-2xl">
-            <div className="mb-5 text-5xl">📣</div>
+          <section className="mx-auto mt-24 max-w-7xl px-6">
+  <div
+    className="
+    relative overflow-hidden
+    rounded-[40px]
+    border border-sky-100
+    bg-gradient-to-br
+    from-white
+    via-sky-50
+    to-white
+    p-14
+    shadow-[0_20px_50px_rgba(0,0,0,0.08)]
+    "
+  >
+    {/* background decoration */}
+    <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-sky-100 opacity-70 blur-3xl"></div>
 
-            <h2 className="text-3xl font-black">
-              Promote Your Business While Supporting the Academy
-            </h2>
+    <div className="absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-orange-100 opacity-60 blur-3xl"></div>
 
-            <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-              Sponsors and community partners may be featured on this page to share their information, introduce their mission, and support the growth of our table tennis community.
-            </p>
+    <div className="relative z-10 text-center">
 
-            <a
-              href="/#contact"
-              className="mt-8 inline-block rounded-full bg-orange-400 px-8 py-4 font-bold text-slate-900 hover:bg-orange-300"
-            >
-              Contact Us
-            </a>
-          </div>
+      <div className="mb-6 inline-flex rounded-full bg-white px-5 py-2 shadow-md">
+        <span className="text-sm font-bold tracking-[0.3em] text-sky-700">
+          COMMUNITY SUPPORT
+        </span>
+      </div>
+
+      <h2 className="text-5xl font-extrabold text-slate-900">
+        Become a Community Partner
+      </h2>
+
+      <p className="mx-auto mt-6 max-w-3xl text-xl leading-9 text-slate-600">
+        Sponsors and community partners may be featured on this page to share
+        their information, introduce their mission, and support the growth of
+        our table tennis community.
+      </p>
+
+      <button
+  type="button"
+  onClick={() => router.push("/#contact")}
+  className="
+        mt-10 inline-block
+        rounded-full
+        bg-sky-600
+        px-10
+        py-4
+        text-lg
+        font-bold
+        text-white
+        shadow-lg
+        transition-all
+        hover:-translate-y-1
+        hover:bg-sky-700
+        "
+>
+  Contact Us
+</button>
+
+    </div>
+  </div>
+</section>
         </div>
       </section>
 
@@ -229,12 +281,12 @@ our valued sponsors and community supporters.
               X
             </button>
 
-            {(selectedSponsor.logo_image || selectedSponsor.banner_image) && (
+            {selectedSponsor.logo_image && (
               <div className="mb-8 flex justify-center rounded-3xl bg-white p-6">
                 <img
-                  src={selectedSponsor.banner_image || selectedSponsor.logo_image || ""}
+                  src={selectedSponsor.logo_image}
                   alt={selectedSponsor.name}
-                  className="max-h-[320px] max-w-full rounded-2xl object-contain"
+                  className="max-h-[360px] max-w-full rounded-2xl object-contain"
                 />
               </div>
             )}
@@ -256,51 +308,68 @@ our valued sponsors and community supporters.
             )}
 
             {selectedSponsor.offer && (
-  <div className="mt-6 rounded-3xl bg-orange-50 p-6">
-    <h3 className="text-xl font-bold text-orange-600">
-      Sponsor Spotlight
-    </h3>
+              <div className="mt-6 rounded-3xl bg-orange-50 p-6">
+                <h3 className="text-xl font-bold text-orange-600">
+                  Partner Introduction
+                </h3>
 
-    <p className="mt-3 leading-7 text-slate-700">
-      {selectedSponsor.offer}
-    </p>
-  </div>
-)}
+                <p className="mt-3 leading-7 text-slate-700">
+                  {selectedSponsor.offer}
+                </p>
+              </div>
+            )}
 
-           <div className="mt-8 space-y-3 rounded-3xl bg-slate-50 p-6 text-slate-700">
-  {selectedSponsor.address && (
-    <p>
-      <span className="font-bold text-slate-900">Address: </span>
-      {selectedSponsor.address}
-    </p>
-  )}
+            {(selectedSponsor.phone ||
+              selectedSponsor.email ||
+              selectedSponsor.website ||
+              selectedSponsor.address) && (
+              <div className="mt-8 space-y-3 rounded-3xl bg-slate-50 p-6 text-slate-700">
+                {selectedSponsor.phone && (
+                  <p>
+                    <span className="font-bold text-slate-900">Phone: </span>
+                    <a
+                      href={`tel:${selectedSponsor.phone}`}
+                      className="text-sky-700 hover:text-orange-500"
+                    >
+                      {selectedSponsor.phone}
+                    </a>
+                  </p>
+                )}
 
-  {selectedSponsor.phone && (
-    <p>
-      <span className="font-bold text-slate-900">Phone: </span>
-      <a
-        href={`tel:${selectedSponsor.phone}`}
-        className="text-sky-700 hover:text-orange-500"
-      >
-        {selectedSponsor.phone}
-      </a>
-    </p>
-  )}
+                {selectedSponsor.email && (
+                  <p>
+                    <span className="font-bold text-slate-900">E-mail: </span>
+                    <a
+                      href={`mailto:${selectedSponsor.email}`}
+                      className="text-sky-700 hover:text-orange-500"
+                    >
+                      {selectedSponsor.email}
+                    </a>
+                  </p>
+                )}
 
-  {selectedSponsor.website && (
-    <p>
-      <span className="font-bold text-slate-900">Website: </span>
-      <a
-        href={selectedSponsor.website}
-        target="_blank"
-        rel="noreferrer"
-        className="break-all text-sky-700 hover:text-orange-500"
-      >
-        {selectedSponsor.website}
-      </a>
-    </p>
-  )}
-</div>
+                {selectedSponsor.website && (
+                  <p>
+                    <span className="font-bold text-slate-900">Website: </span>
+                    <a
+                      href={selectedSponsor.website}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="break-all text-sky-700 hover:text-orange-500"
+                    >
+                      {selectedSponsor.website}
+                    </a>
+                  </p>
+                )}
+
+                {selectedSponsor.address && (
+                  <p>
+                    <span className="font-bold text-slate-900">Address: </span>
+                    {selectedSponsor.address}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import RatingSection from "@/components/RatingSection";
@@ -20,13 +22,17 @@ export default function Home() {
 
       <About />
 
-      <Coaching />
+      <Suspense fallback={<div className="py-20 text-center">Loading coaching...</div>}>
+        <Coaching />
+      </Suspense>
 
       <Membership />
 
       <Gallery />
 
-      <News />
+      <Suspense fallback={<div className="py-20 text-center">Loading news...</div>}>
+        <News />
+      </Suspense>
 
       <Contact />
 

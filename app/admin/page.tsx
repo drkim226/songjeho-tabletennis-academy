@@ -34,29 +34,36 @@ export default function AdminPage() {
   }, []);
 
   const checkAdmin = async () => {
-    setChecking(true);
+  setChecking(true);
 
+  try {
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  data: { session },
+} = await supabase.auth.getSession();
 
-    if (!user) {
-      setIsAdmin(false);
-      setChecking(false);
-      return;
-    }
+const user = session?.user;
 
-    const { data: adminUser } = await supabase
+if (!user) {
+  setIsAdmin(false);
+  setChecking(false);
+  return;
+}
+
+    const { data: adminUser, error: adminError } = await supabase
       .from("admin_users")
       .select("id")
       .eq("auth_user_id", user.id)
       .maybeSingle();
 
-    const { data: member } = await supabase
+    if (adminError) throw adminError;
+
+    const { data: member, error: memberError } = await supabase
       .from("members")
       .select("membership_type, role_approved")
       .eq("auth_user_id", user.id)
       .maybeSingle();
+
+    if (memberError) throw memberError;
 
     const adminAccess =
       !!adminUser ||
@@ -70,8 +77,13 @@ export default function AdminPage() {
 
     setIsAdmin(true);
     await loadMembers();
+  } catch (err) {
+    console.error("Admin check failed:", err);
+    setIsAdmin(false);
+  } finally {
     setChecking(false);
-  };
+  }
+};
 
   const loadMembers = async () => {
     const { data, error } = await supabase
@@ -88,39 +100,28 @@ export default function AdminPage() {
   };
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginLoading(true);
+  e.preventDefault();
+  setLoginLoading(true);
 
+  try {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
-    setLoginLoading(false);
 
     if (error) {
       alert(error.message);
       return;
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) return;
-
-    const { data: member } = await supabase
-      .from("members")
-      .select("membership_type, role_approved")
-      .eq("auth_user_id", user.id)
-      .single();
-
-    if (member?.membership_type === "Admin" && member?.role_approved) {
-      await checkAdmin();
-    } else {
-      window.location.href = "/members/profile";
-    }
-  };
+    await checkAdmin();
+  } catch (err) {
+    console.error("Login failed:", err);
+    alert("Login failed. Please check your connection or Supabase settings.");
+  } finally {
+    setLoginLoading(false);
+  }
+};
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -241,11 +242,11 @@ export default function AdminPage() {
             </h1>
 
             <a
-              href="/admin/rating"
-              className="mt-6 inline-block rounded-full bg-sky-600 px-8 py-4 font-bold text-white hover:bg-sky-700"
-            >
-              Manage Rating Applications
-            </a>
+  href="/workspace"
+  className="mt-6 inline-block rounded-full bg-sky-600 px-8 py-4 font-bold text-white hover:bg-sky-700"
+>
+  Open Workspace
+</a>
           </div>
 
           <button

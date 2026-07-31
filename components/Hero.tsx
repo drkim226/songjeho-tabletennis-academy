@@ -2,15 +2,15 @@ import Image from "next/image";
 
 export default function Hero() {
   return (
-    <section className="relative min-h-screen overflow-hidden">
+    <section className="relative h-screen overflow-hidden">
       <Image
-        src="/images/club-main2.jpg"
-        alt="Song Jeho Table Tennis Club"
-        fill
-        priority
-        className="hero-zoom object-cover"
-      />
-
+  src="/images/club-main2.jpg"
+  alt="Song Jeho Table Tennis Club"
+  fill
+  priority
+  sizes="100vw"
+  className="object-cover"
+/>
       <div className="absolute inset-0 bg-gradient-to-r from-sky-950/90 via-sky-800/60 to-sky-500/20" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-white/10" />
 
