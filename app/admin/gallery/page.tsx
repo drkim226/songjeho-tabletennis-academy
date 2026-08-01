@@ -787,13 +787,10 @@ export default function AdminGalleryPage() {
                         />
 
                         <input
-                          value={albumSlug}
-                          onChange={(event) =>
-                            setAlbumSlug(event.target.value)
-                          }
-                          placeholder="Album slug"
-                          className="w-full rounded-2xl border border-slate-200 px-5 py-4"
-                        />
+  value={albumSlug}
+  readOnly
+  className="w-full rounded-2xl border border-slate-200 bg-slate-100 px-5 py-4 text-slate-500"
+/>
 
                         <textarea
                           value={albumDescription}
