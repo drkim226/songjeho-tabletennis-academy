@@ -28,67 +28,78 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
 
   const [loginLoading, setLoginLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+
+  const [loginMessage, setLoginMessage] = useState("");
+  const [loginError, setLoginError] = useState("");
 
   useEffect(() => {
-    checkAdmin();
+    void checkAdmin();
   }, []);
 
   const checkAdmin = async () => {
-  setChecking(true);
+    setChecking(true);
 
-  try {
-    const {
-  data: { session },
-} = await supabase.auth.getSession();
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-const user = session?.user;
+      const user = session?.user;
 
-if (!user) {
-  setIsAdmin(false);
-  setChecking(false);
-  return;
-}
+      if (!user) {
+        setIsAdmin(false);
+        setChecking(false);
+        return;
+      }
 
-    const { data: adminUser, error: adminError } = await supabase
-      .from("admin_users")
-      .select("id")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
+      const { data: adminUser, error: adminError } = await supabase
+        .from("admin_users")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
 
-    if (adminError) throw adminError;
+      if (adminError) {
+        throw adminError;
+      }
 
-    const { data: member, error: memberError } = await supabase
-      .from("members")
-      .select("membership_type, role_approved")
-      .eq("auth_user_id", user.id)
-      .maybeSingle();
+      const { data: member, error: memberError } = await supabase
+        .from("members")
+        .select("membership_type, role_approved")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
 
-    if (memberError) throw memberError;
+      if (memberError) {
+        throw memberError;
+      }
 
-    const adminAccess =
-      !!adminUser ||
-      (member?.membership_type === "Admin" && member?.role_approved === true);
+      const adminAccess =
+        Boolean(adminUser) ||
+        (member?.membership_type === "Admin" &&
+          member?.role_approved === true);
 
-    if (!adminAccess) {
+      if (!adminAccess) {
+        setIsAdmin(false);
+        setChecking(false);
+        return;
+      }
+
+      setIsAdmin(true);
+      await loadMembers();
+    } catch (error) {
+      console.error("Admin check failed:", error);
       setIsAdmin(false);
+    } finally {
       setChecking(false);
-      return;
     }
-
-    setIsAdmin(true);
-    await loadMembers();
-  } catch (err) {
-    console.error("Admin check failed:", err);
-    setIsAdmin(false);
-  } finally {
-    setChecking(false);
-  }
-};
+  };
 
   const loadMembers = async () => {
     const { data, error } = await supabase
       .from("members")
-      .select("id, full_name, email, phone, membership_type, role_approved")
+      .select(
+        "id, full_name, email, phone, membership_type, role_approved"
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -99,39 +110,88 @@ if (!user) {
     setMembers(data || []);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoginLoading(true);
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  try {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setLoginMessage("");
+    setLoginError("");
+    setLoginLoading(true);
 
-    if (error) {
-      alert(error.message);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setLoginError(error.message);
+        return;
+      }
+
+      await checkAdmin();
+    } catch (error) {
+      console.error("Login failed:", error);
+      setLoginError(
+        "Login failed. Please check your connection or Supabase settings."
+      );
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    setLoginMessage("");
+    setLoginError("");
+
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      setLoginError(
+        "Enter your administrator email address first, then click Forgot Password."
+      );
       return;
     }
 
-    await checkAdmin();
-  } catch (err) {
-    console.error("Login failed:", err);
-    alert("Login failed. Please check your connection or Supabase settings.");
-  } finally {
-    setLoginLoading(false);
-  }
-};
+    setResetLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        cleanEmail,
+        {
+          redirectTo: "https://songjehotta.com/reset-password",
+        }
+      );
+
+      if (error) {
+        setLoginError("Password reset email failed: " + error.message);
+        return;
+      }
+
+      setLoginMessage(
+        "Password reset email sent. Open the newest email and click the reset link."
+      );
+    } catch (error) {
+      console.error("Password reset failed:", error);
+      setLoginError(
+        "Could not send the password reset email. Please try again."
+      );
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setIsAdmin(false);
     setMembers([]);
+    setPassword("");
   };
 
   const updateMember = async (
     id: number,
-    updates: Partial<Pick<Member, "membership_type" | "role_approved">>
+    updates: Partial<
+      Pick<Member, "membership_type" | "role_approved">
+    >
   ) => {
     const { error } = await supabase
       .from("members")
@@ -143,8 +203,8 @@ if (!user) {
       return;
     }
 
-    setMembers((prev) =>
-      prev.map((member) =>
+    setMembers((previous) =>
+      previous.map((member) =>
         member.id === id ? { ...member, ...updates } : member
       )
     );
@@ -178,37 +238,74 @@ if (!user) {
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
+              <label
+                htmlFor="admin-email"
+                className="mb-2 block text-sm font-bold text-slate-700"
+              >
                 Email
               </label>
 
               <input
+                id="admin-email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:border-sky-500"
+                placeholder="Administrator email"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-bold text-slate-700">
+              <label
+                htmlFor="admin-password"
+                className="mb-2 block text-sm font-bold text-slate-700"
+              >
                 Password
               </label>
 
               <input
+                id="admin-password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 className="w-full rounded-2xl border border-slate-200 px-5 py-4 outline-none focus:border-sky-500"
+                placeholder="Password"
               />
+
+              <div className="mt-3 text-right">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading}
+                  className="text-sm font-bold text-sky-700 hover:text-orange-500 disabled:cursor-not-allowed disabled:text-slate-400"
+                >
+                  {resetLoading
+                    ? "Sending reset email..."
+                    : "Forgot Password?"}
+                </button>
+              </div>
             </div>
+
+            {loginError && (
+              <p className="rounded-2xl bg-red-50 p-4 text-sm font-semibold leading-6 text-red-600">
+                {loginError}
+              </p>
+            )}
+
+            {loginMessage && (
+              <p className="rounded-2xl bg-green-50 p-4 text-sm font-semibold leading-6 text-green-700">
+                {loginMessage}
+              </p>
+            )}
 
             <button
               type="submit"
-              disabled={loginLoading}
-              className="w-full rounded-2xl bg-sky-600 py-4 text-lg font-bold text-white hover:bg-sky-700 disabled:opacity-50"
+              disabled={loginLoading || resetLoading}
+              className="w-full rounded-2xl bg-sky-600 py-4 text-lg font-bold text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loginLoading ? "Logging in..." : "Login"}
             </button>
@@ -242,14 +339,15 @@ if (!user) {
             </h1>
 
             <a
-  href="/workspace"
-  className="mt-6 inline-block rounded-full bg-sky-600 px-8 py-4 font-bold text-white hover:bg-sky-700"
->
-  Open Workspace
-</a>
+              href="/workspace"
+              className="mt-6 inline-block rounded-full bg-sky-600 px-8 py-4 font-bold text-white hover:bg-sky-700"
+            >
+              Open Workspace
+            </a>
           </div>
 
           <button
+            type="button"
             onClick={handleLogout}
             className="rounded-full bg-orange-500 px-6 py-3 font-bold text-white hover:bg-orange-600"
           >
@@ -271,13 +369,23 @@ if (!user) {
 
             <tbody>
               {members.map((member) => {
-                const isProtectedAdmin = member.membership_type === "Admin";
+                const isProtectedAdmin =
+                  member.membership_type === "Admin";
 
                 return (
-                  <tr key={member.id} className="border-b border-slate-100">
-                    <td className="p-4 font-bold">{member.full_name}</td>
+                  <tr
+                    key={member.id}
+                    className="border-b border-slate-100"
+                  >
+                    <td className="p-4 font-bold">
+                      {member.full_name}
+                    </td>
+
                     <td className="p-4">{member.email}</td>
-                    <td className="p-4">{member.phone || "N/A"}</td>
+
+                    <td className="p-4">
+                      {member.phone || "N/A"}
+                    </td>
 
                     <td className="p-4">
                       {isProtectedAdmin ? (
@@ -287,9 +395,9 @@ if (!user) {
                       ) : (
                         <select
                           value={member.membership_type}
-                          onChange={(e) =>
+                          onChange={(event) =>
                             updateMember(member.id, {
-                              membership_type: e.target.value,
+                              membership_type: event.target.value,
                               role_approved: false,
                             })
                           }
@@ -311,9 +419,11 @@ if (!user) {
                         </span>
                       ) : (
                         <button
+                          type="button"
                           onClick={() =>
                             updateMember(member.id, {
-                              role_approved: !member.role_approved,
+                              role_approved:
+                                !member.role_approved,
                             })
                           }
                           className={`rounded-full px-4 py-2 font-bold ${
@@ -322,7 +432,9 @@ if (!user) {
                               : "bg-orange-100 text-orange-700"
                           }`}
                         >
-                          {member.role_approved ? "Approved" : "Pending"}
+                          {member.role_approved
+                            ? "Approved"
+                            : "Pending"}
                         </button>
                       )}
                     </td>
