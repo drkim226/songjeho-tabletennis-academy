@@ -2,6 +2,9 @@
 import PhotoMasonryGallery from "@/components/PhotoMasonryGallery";
 import { supabase } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function TournamentAlbumPage({
   params,
 }: {
