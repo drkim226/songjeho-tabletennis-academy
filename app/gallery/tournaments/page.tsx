@@ -1,5 +1,7 @@
-
 import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TournamentGalleryPage() {
   const { data: albums, error } = await supabase
@@ -11,8 +13,6 @@ export default async function TournamentGalleryPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-800">
-     
-
       <section className="px-6 pb-24 pt-32">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 text-center">
@@ -85,8 +85,6 @@ export default async function TournamentGalleryPage() {
           </div>
         </div>
       </section>
-
-    
     </main>
   );
 }
