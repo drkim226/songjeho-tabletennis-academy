@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 //const SIX_HOURS = 4 * 60 * 60 * 1000;
-const SIX_HOURS = 2 * 60 * 1000;
+const SIX_HOURS = 1 * 60 * 1000;
 
 // localStorage key
 const LAST_ACTIVITY_KEY = "admin_last_activity";
