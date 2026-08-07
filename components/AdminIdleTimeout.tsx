@@ -4,14 +4,14 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-//const SIX_HOURS = 4 * 60 * 60 * 1000;
-const SIX_HOURS = 1 * 60 * 1000;
+// 테스트 중에는 1분
+const IDLE_TIMEOUT = 1 * 60 * 1000;
 
-// localStorage key
+// 실제 사용 시 예: 4시간
+// const IDLE_TIMEOUT = 4 * 60 * 60 * 1000;
+
 const LAST_ACTIVITY_KEY = "admin_last_activity";
-
-// 너무 자주 localStorage에 기록하지 않도록 제한
-const ACTIVITY_UPDATE_INTERVAL = 60 * 1000; // 1분
+const ACTIVITY_UPDATE_INTERVAL = 60 * 1000;
 
 export default function AdminIdleTimeout() {
   const pathname = usePathname();
@@ -20,27 +20,26 @@ export default function AdminIdleTimeout() {
   const lastRecordedRef = useRef(0);
   const loggingOutRef = useRef(false);
 
-  const isAdminArea =
-    pathname === "/admin" ||
+  const isAdminLoginPage = pathname === "/admin";
+
+  const isProtectedAdminArea =
     pathname.startsWith("/admin/") ||
     pathname === "/workspace" ||
     pathname.startsWith("/workspace/");
 
   useEffect(() => {
-    if (!isAdminArea) {
+    // /admin 로그인 페이지는 보호 대상에서 제외
+    if (!isProtectedAdminArea) {
       return;
     }
 
     const logout = async () => {
-      if (loggingOutRef.current) {
-        return;
-      }
+      if (loggingOutRef.current) return;
 
       loggingOutRef.current = true;
 
       try {
         localStorage.removeItem(LAST_ACTIVITY_KEY);
-
         await supabase.auth.signOut();
       } catch (error) {
         console.error("Automatic logout failed:", error);
@@ -50,14 +49,21 @@ export default function AdminIdleTimeout() {
       }
     };
 
-    const checkTimeout = async () => {
+    const checkSessionAndTimeout = async () => {
       const {
         data: { session },
+        error,
       } = await supabase.auth.getSession();
 
-      // 로그인하지 않은 경우 timeout 기록 불필요
+      if (error) {
+        console.error("Session check failed:", error);
+      }
+
+      // 세션 없으면 보호된 관리자 페이지 접근 금지
       if (!session) {
         localStorage.removeItem(LAST_ACTIVITY_KEY);
+        router.replace("/admin");
+        router.refresh();
         return;
       }
 
@@ -68,7 +74,6 @@ export default function AdminIdleTimeout() {
 
         localStorage.setItem(LAST_ACTIVITY_KEY, String(now));
         lastRecordedRef.current = now;
-
         return;
       }
 
@@ -76,7 +81,7 @@ export default function AdminIdleTimeout() {
 
       if (
         !Number.isFinite(lastActivity) ||
-        Date.now() - lastActivity >= SIX_HOURS
+        Date.now() - lastActivity >= IDLE_TIMEOUT
       ) {
         await logout();
       }
@@ -100,8 +105,7 @@ export default function AdminIdleTimeout() {
       lastRecordedRef.current = now;
     };
 
-    // 페이지 진입 시 먼저 확인
-    void checkTimeout();
+    void checkSessionAndTimeout();
 
     const existingValue =
       localStorage.getItem(LAST_ACTIVITY_KEY);
@@ -127,7 +131,6 @@ export default function AdminIdleTimeout() {
       );
     });
 
-    // 다른 탭에서 활동/로그아웃한 경우도 반영
     const handleStorage = (
       event: StorageEvent
     ) => {
@@ -138,6 +141,15 @@ export default function AdminIdleTimeout() {
         lastRecordedRef.current =
           Number(event.newValue) || 0;
       }
+
+      // 다른 탭에서 로그아웃된 경우
+      if (
+        event.key === LAST_ACTIVITY_KEY &&
+        event.newValue === null
+      ) {
+        router.replace("/admin");
+        router.refresh();
+      }
     };
 
     window.addEventListener(
@@ -145,17 +157,15 @@ export default function AdminIdleTimeout() {
       handleStorage
     );
 
-    // 일정 간격으로 6시간 초과 여부 확인
     const timer = window.setInterval(() => {
-      void checkTimeout();
+      void checkSessionAndTimeout();
     }, 60 * 1000);
 
-    // 브라우저 탭으로 다시 돌아왔을 때 즉시 확인
     const handleVisibilityChange = () => {
       if (
         document.visibilityState === "visible"
       ) {
-        void checkTimeout();
+        void checkSessionAndTimeout();
       }
     };
 
@@ -184,7 +194,7 @@ export default function AdminIdleTimeout() {
 
       window.clearInterval(timer);
     };
-  }, [isAdminArea, pathname, router]);
+  }, [isProtectedAdminArea, pathname, router]);
 
   return null;
 }
