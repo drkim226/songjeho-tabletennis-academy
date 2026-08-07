@@ -5,10 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 // 테스트 중에는 1분
-const IDLE_TIMEOUT = 1 * 60 * 1000;
+//const IDLE_TIMEOUT = 1 * 60 * 1000;
 
 // 실제 사용 시 예: 4시간
-// const IDLE_TIMEOUT = 4 * 60 * 60 * 1000;
+const IDLE_TIMEOUT = 4 * 60 * 60 * 1000;
 
 const LAST_ACTIVITY_KEY = "admin_last_activity";
 const ACTIVITY_UPDATE_INTERVAL = 60 * 1000;
